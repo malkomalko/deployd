@@ -18,13 +18,13 @@ Extensible, distributed resource server.
 ## CLI
 
     $ dpd
-    $ deployd is running at http://localhost:2304
+    $ deployd is running at http://localhost:2403
 
 ## Client
 
 The deployd api is entirely available over http. A basic http client is bundled.
 
-    var client = require('deployd').client.use('http://localhost:2304')
+    var client = require('deployd').client.use('http://localhost:2403')
       , resources = client.use('/resources')
       , types = client.use('/types');
 
@@ -32,7 +32,7 @@ The deployd api is entirely available over http. A basic http client is bundled.
 
 The HTTP Client and node module api are the same. 
 
-    var dpd = require('deployd').use('http://localhost:2304')
+    var dpd = require('deployd').use('http://localhost:2403')
       , resources = dpd.use('/resources')
       , types = dpd.use('/types');
 
