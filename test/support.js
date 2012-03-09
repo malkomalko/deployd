@@ -2,10 +2,10 @@
 
 expect = require('chai').expect
 dpd = require('../')
-root = {key: 'foo', secret: 'bar'}
-server = dpd.use('http://localhost:3003')
+root = {user: 'foo', must: 'have', multiple: 'keys'}
+server = dpd.use('http://localhost:3003').storage('mongodb://localhost/deployd-testing-db')
 client = require('mdoq').use('http://localhost:3003').use(function (req, res, next) {
-  req.headers['x-dssh-key'] = root.key;
+  req.headers['x-dssh-key'] = JSON.stringify(root);
   next();
 }).use(require('../lib/client'));
 resources = client.use('/resources')
@@ -57,8 +57,10 @@ before(function(done){
   // remove old key
   keys.del(function () {
     // authorize root key
-    dpd.use('/keys').post(root, function (err) {
-      done(err)
+    dpd.use('/keys').post(root, function (err, key) {
+      // _id must be included
+      root._id = key._id;
+      done(err);
     })
   })
 })
@@ -67,7 +69,7 @@ beforeEach(function(done){
   server.listen(function () {
     clear(function () {
       resources.post(data.resources.todos, function (e) {
-        resources.post(data.resources.users, function (err) {
+        resources.post(data.resources.users, function (err, b, req, res) {
           done(err || e);
         })
       })

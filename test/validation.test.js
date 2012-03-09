@@ -17,4 +17,31 @@ describe('Validation', function(){
       })
     })
   })
+  
+  describe('GET /todos/<ObjectID>', function(){
+    it('should return a single item', function(done) {
+      todos.post({title: 'a random todo'}, function (err, todo) {
+        todos.use('/' + todo._id).get(function (e, t) {
+          expect(t).to.exist;
+          expect(t).to.be.a('object');
+          expect(t._id).to.equal(todo._id);
+          done(e);
+        })
+      })
+    })
+  })
+  
+  describe('PUT /todos/<ObjectID>', function(){
+    it('should update a single item', function(done) {
+      todos.post({title: 'a random todo'}, function (e, t) {
+        t.title = 'foobar';
+        todos.use('/' + t._id).put(t, function (error, todo) {
+          todos.use('/' + todo._id).get(function (err) {
+            expect(t.title).to.equal('foobar');
+            done(err);
+          })
+        })
+      })
+    })
+  })
 })
