@@ -1,5 +1,4 @@
-var program = require('commander')
-  , deployd = require('../')
+var deployd = require('../')
   , repl = require('../lib/client/repl')
   , shelljs = require('shelljs/global')
   , mongod = require('../lib/util/mongod')
@@ -16,11 +15,68 @@ var program = require('commander')
 /**
  * listen for start command
  */
-
+var program;
 process.on('message', function (msg) {
-  if(msg.command === 'start') {
-    start(msg.file, msg.program);
+  var file = msg.file;
+  var starting = msg.command === 'start';
+  // set module program
+  program = msg.program;
+  if(msg.command) {
+    var port = program.port || 2403
+      , mongoPort = generatePort();
+    if (file) {
+      process.chdir(path.dirname(file));
+    }
+    if (test('-f', 'app.dpd')) {
+      if(starting) console.log("starting deployd v" + package.version + "...");
+
+      if (fs.existsSync(latestversionFile)) {
+        var latest = fs.readFileSync(latestversionFile, 'utf-8');
+        if (latest && latest !== package.version) {
+          console.log("deployd v" + latest + " is available. Use dpd-update command to install");
+        }  
+      }
+      checkForUpdates();
+
+      if (!test('-d', './.dpd')) mkdir('-p', './.dpd');
+      if (!test('-d', './.dpd/pids')) mkdir('-p', './.dpd/pids');
+      if (!test('-d', './data')) mkdir('-p', './data');
+
+      mongod.restart(program.mongod || 'mongod', process.env.DPD_ENV || 'development', mongoPort, function(err) {
+        if (err) { 
+          console.log("Failed to start MongoDB");
+          return stop(1);
+        }
+        var options = {port: port, env: 'development', db: {host: '127.0.0.1', port: mongoPort, name: '-deployd'}}
+
+        options.env = program.environment || process.env.DPD_ENV || options.env;
+        if(options.env !== 'development') console.log('starting in %s mode', options.env);
+
+        var dpd = deployd(options);
+        dpd.listen();
+        dpd.on('listening', function () {
+
+          if(starting) {
+            console.info('listening on port', port);
+            console.log('type help for a list of commands');
+          }
+          
+          var commands = repl(dpd);
+          if (program.dashboard) {
+            commands.dashboard();
+          } else if (program.open) {
+            commands.open();
+          }
+        });
+      });
+    } else {
+      console.log("This directory does not contain a Deployd app!");
+      console.log("Use \"dpd create <appname>\" to create a new app");
+      console.log("or use \"dpd path/to/app.dpd\" to start an app in another directory");
+      stop(1);
+    }
   }
+  
 })
 
 function generatePort() {
@@ -44,58 +100,6 @@ function checkForUpdates() {
   });
 }
 
-function start(file, program) {
-  var port = program.port || 2403
-    , mongoPort = generatePort();
-  if (file) {
-    process.chdir(path.dirname(file));
-  }
-  if (test('-f', 'app.dpd')) {
-    console.log("starting deployd v" + package.version + "...");
-
-    if (fs.existsSync(latestversionFile)) {
-      var latest = fs.readFileSync(latestversionFile, 'utf-8');
-      if (latest && latest !== package.version) {
-        console.log("deployd v" + latest + " is available. Use dpd-update command to install");
-      }  
-    }
-    checkForUpdates();
-    
-    if (!test('-d', './.dpd')) mkdir('-p', './.dpd');
-    if (!test('-d', './.dpd/pids')) mkdir('-p', './.dpd/pids');
-    if (!test('-d', './data')) mkdir('-p', './data');
-
-    mongod.restart(program.mongod || 'mongod', process.env.DPD_ENV || 'development', mongoPort, function(err) {
-      if (err) { 
-        console.log("Failed to start MongoDB");
-        return stop(1);
-      }
-      var options = {port: port, env: 'development', db: {host: '127.0.0.1', port: mongoPort, name: '-deployd'}}
-
-      options.env = program.environment || process.env.DPD_ENV || options.env;
-      if(options.env !== 'development') console.log('starting in %s mode', options.env);
-
-      var dpd = deployd(options);
-      dpd.listen();
-      dpd.on('listening', function () {
-
-        console.info('listening on port', port);
-        var commands = repl(dpd);
-        if (program.dashboard) {
-          commands.dashboard();
-        } else if (program.open) {
-          commands.open();
-        }
-      });
-    });
-  } else {
-    console.log("This directory does not contain a Deployd app!");
-    console.log("Use \"dpd create <appname>\" to create a new app");
-    console.log("or use \"dpd path/to/app.dpd\" to start an app in another directory");
-    stop(1);
-  }
-}
-
 function stop(code) {
   var fn = function() {
     exit(code);
@@ -103,10 +107,17 @@ function stop(code) {
 
   if (program.wait) {
     process.stdin.resume();
-    process.stdin.setRawMode(true);
+    if(process.stdin.setRawMode) process.stdin.setRawMode(true);
     process.stdout.write('\nPress any key to continue...\n');
     process.stdin.on('keypress', fn);
   } else {
     fn();
   }
 }
+
+process.on('uncaughtException', function (err) {
+  console.log();
+  console.error(err.stack);
+  console.log();
+  stop();
+});

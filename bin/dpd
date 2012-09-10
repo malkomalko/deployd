@@ -25,6 +25,7 @@ program
   .option('-d, --dashboard', 'start the dashboard immediately')
   .option('-o, --open', 'open in a browser')
   .option('-e, --environment [env]', 'defaults to development')
+  .option('-s, --spin [time]', 'minimum milliseconds dpd has to be up before aborting a restart (2000)')
 
 /**
  * Commands
@@ -155,13 +156,25 @@ program
 
 function start(file) {
   var p = {};
-  console.log(program.toJSON());
+  var options = ['mongod', 'port', 'wait', 'open', 'dashboard', 'environment'];
   
-  var monitor = new Monitor(__dirname + '/start.js', {fork: true});
+  options.forEach(function (key) {
+    p[key] = program[key];
+  });
+  
+  var monitor = new Monitor(__dirname + '/start.js', {fork: true, minUptime: program.spin || 2000});
   monitor.on('start', function () {
     monitor.child.send({command: 'start', program: p, file: file});
-  })
+  });
+  monitor.on('restart', function () {
+    process.stdin.pipe(monitor.child.stdin);
+    monitor.child.send({command: 'restart', program: p, file: file});
+  });
+  monitor.on('exit', function () {
+    process.exit();
+  });
   monitor.start();
+  process.stdin.pipe(monitor.child.stdin);
 }
 
 /**
