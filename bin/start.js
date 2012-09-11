@@ -7,7 +7,7 @@ var deployd = require('../')
   , tty = require('tty')
   , remote = require('../lib/client/remote')
   , request = require('request')
-  , package = require('../package')
+  , packageInfo = require('../package')
   , latestversionFile = path.join(__dirname, '../.latestversion')
   , Deployment = require('../lib/client/deploy').Deployment
   , open = require('../lib/util/open');
@@ -28,11 +28,11 @@ process.on('message', function (msg) {
       process.chdir(path.dirname(file));
     }
     if (test('-f', 'app.dpd')) {
-      if(starting) console.log("starting deployd v" + package.version + "...");
+      if(starting) console.log("starting deployd v" + packageInfo.version + "...");
 
       if (fs.existsSync(latestversionFile)) {
         var latest = fs.readFileSync(latestversionFile, 'utf-8');
-        if (latest && latest !== package.version) {
+        if (latest && latest !== packageInfo.version) {
           console.log("deployd v" + latest + " is available. Use dpd-update command to install");
         }  
       }
@@ -47,7 +47,7 @@ process.on('message', function (msg) {
           console.log("Failed to start MongoDB");
           return stop(1);
         }
-        var options = {port: port, env: 'development', db: {host: '127.0.0.1', port: mongoPort, name: '-deployd'}}
+        var options = {port: port, env: 'development', db: {host: '127.0.0.1', port: mongoPort, name: '-deployd'}};
 
         options.env = program.environment || process.env.DPD_ENV || options.env;
         if(options.env !== 'development') console.log('starting in %s mode', options.env);
@@ -77,7 +77,7 @@ process.on('message', function (msg) {
     }
   }
   
-})
+});
 
 function generatePort() {
   var portRange = [ 3000, 9000 ];
