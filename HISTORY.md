@@ -1,5 +1,21 @@
 # History
 
+
+## 0.6.3
+
+ - Removed dependency on jQuery for dpd.js
+ - JSON-formatted "bad credentials" login error
+ - Improved error reporting on CLI when port is in use
+ - If in development mode, and no port has been specifically requested, CLI will retry with up to 5 different ports- Fixed "no open connections" bug on startup
+ - Renamed `Db.connect()` to `Db.create()`
+ - Db connections are now lazy and only occur once a request is made
+ - Added 500 and 404 error pages
+ - Added module domain error handling for better module errors
+
+## 0.6.2
+
+- Fixed rare but annoying bug where server would crash for no good reason ("Cannot set headers") on a request
+
 ## 0.6.1
 
  - Bumped the default recursion limit to 2 levels

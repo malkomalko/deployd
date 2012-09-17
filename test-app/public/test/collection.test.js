@@ -122,7 +122,6 @@ describe('Collection', function() {
 
     describe('.get(fn)', function() {
       it('should not return any cancelled objects', function(done) {
-
         chain(function(next) {
           dpd.todos.post({title: "This one is OK"}, next);
         }).chain(function(next, res, err) {
@@ -221,6 +220,29 @@ describe('Collection', function() {
               expect(todos[0].err).to.exist;
               done();
             });
+          });
+        });
+      });
+    });
+
+    describe('.get(27, fn)', function() {
+      it('should not hang if given a number as id', function(done) {
+        dpd.todos.post({title: 'foobar'}, function () {
+          dpd.todos.get(27, function (todos, err) {
+            expect(err).to.exist;
+            done();
+          });
+        });
+      });
+    });
+
+    describe('.get({numberGet: true}, fn)', function() {
+      it('should not hang if given a number as id', function(done) {
+        dpd.todos.post({title: 'foobar'}, function () {
+          dpd.todos.get({numberGet: true}, function (todos, err) {
+            expect(todos.length).to.equal(1);
+            expect(todos[0].numberGet).to.equal('noResponse');
+            done(err);
           });
         });
       });

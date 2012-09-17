@@ -1,7 +1,7 @@
 {
   "author": "Ritchie Martori",
   "name": "deployd",
-  "version": "0.6.2",
+  "version": "0.6.3",
   "repository": {
     "url": "git://github.com/deployd/deployd.git"
   },
@@ -30,6 +30,8 @@
     "underscore": "1.x.x",
     "ejs": "0.7.x",
     "forever-monitor": "1.1.0"
+    "async": "0.1.x",
+    "doh": "0.x.x"
   },
   "devDependencies": {
     "mocha": "*",
@@ -41,6 +43,10 @@
   "bin": {
     "dpd": "./bin/dpd"
   },
+    "less": "*",
+    "jshint": "*"
+  }, 
+  "bin": { "dpd": "./bin/dpd" },
   "scripts": {
     "test": "mocha",
     "docs": "node docs/src/build.js"

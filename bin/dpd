@@ -7,7 +7,7 @@ var program = require('commander')
   , tty = require('tty')
   , remote = require('../lib/client/remote')
   , request = require('request')
-  , package = require('../package')
+  , packageInfo = require('../package')
   , latestversionFile = path.join(__dirname, '../.latestversion')
   , Deployment = require('../lib/client/deploy').Deployment
   , open = require('../lib/util/open')
@@ -115,7 +115,7 @@ program
         , Keys = require('../lib/keys')
         , keys = new Keys();
 
-      if (process.env["DPDAPP_PORT"]) DPDAPP_URL += ':' + process.env["DPDAPP_PORT"];
+      if (process.env.DPDAPP_PORT) DPDAPP_URL += ':' + process.env.DPDAPP_PORT;
 
       keys.getLocal(function (err, key) {
         if(err) return console.error(err);
