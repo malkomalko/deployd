@@ -1,13 +1,14 @@
-var fs = require('fs') 
+var fs = require('fs')
   , db = require('../lib/db')
-  , configContents = fs.readFileSync('db-remote.config.json','utf8')
+  , configFile = __dirname + '/db-remote.config.json'
+  , configContents = fs.readFileSync(configFile,'utf8')
   , config = JSON.parse(configContents)
   , tester = db.create(config)
   , store = tester.createStore('test-store')
   , Store = require('../lib/db').Store
   , assert = require('assert')
-  ; 
-  
+  ;
+
 if (config.host == 'foo.com') {
     console.warn('Before you run db-remote.unit.js tests, set up the configuration in "db-remote.config.json".')
     return;
@@ -43,7 +44,7 @@ describe('store', function(){
         done(err);
       });
     });
-    
+
     it('should pass the query to the underlying database', function(done) {
       store.insert([{i:1},{i:2},{i:3}], function () {
         store.find({i: {$lt: 3}}, function (err, result) {
@@ -55,7 +56,7 @@ describe('store', function(){
         });
       });
     });
-    
+
     // TODO: convert the rest of the tests
   });
 });
